@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Filme {
+  idFilme        Int        @id @default(autoincrement())
+  titulo         String     @unique
+  dataLancamento DateTime
+  descricao      String
+  duracao        Int
+  idGenero       Int
+  classificacaoMedia Float?
+  genero         Genero     @relation(fields: [idGenero], references: [idGenero])
+  classificacoes Classificacao[]
+  listas         ListaFilme[]
+  pessoas        PessoaFilme[]
+  calendarios Calendario[]
+}
+
+model Utilizador {
+  idUtilizador Int        @id @default(autoincrement())
+  nome         String     @unique
+  email        String     @unique
+  password     String
+  listas       Lista[]
+  classificacoes Classificacao[]
+  calendarios Calendario[]
+  compartilhamentos ListaCompartilhamento[]
+}
+
+model Genero {
+  idGenero   Int      @id @default(autoincrement())
+  nome       String
+  descricao  String
+  filmes     Filme[]
+  series     Series[]
+}
+
+model Series {
+  idSerie      Int       @id @default(autoincrement())
+  titulo       String    @unique
+  dataLancamento DateTime
+  dataFim      DateTime
+  descricao    String
+  idGenero     Int
+  classificacaoMedia Float?
+  genero       Genero    @relation(fields: [idGenero], references: [idGenero])
+  temporadas   Temporada[]
+  classificacoes Classificacao[]
+  pessoas      PessoaSerie[]
+  listas       ListaSerie[]
+}
+
+model Temporada {
+  idTemporada Int      @id @default(autoincrement())
+  nTemporada  Int
+  dataLancamento DateTime
+  idSerie     Int
+  serie       Series   @relation(fields: [idSerie], references: [idSerie])
+  episodios   Episodio[] @relation(onDelete: Cascade)
+}
+
+model Episodio {
+  idEpisodio   Int       @id @default(autoincrement())
+  titulo       String
+  nEpisodio    Int
+  duracao      Int
+  dataLancamento DateTime
+  idTemporada  Int
+  temporada    Temporada @relation(fields: [idTemporada], references: [idTemporada])
+  calendarios Calendario[]
+}
+
+model Pessoa {
+  idPessoa Int      @id @default(autoincrement())
+  nome     String
+  papel    String
+  descricao String
+  filmes   PessoaFilme[]
+  series   PessoaSerie[]
+}
+
+model Lista {
+  idLista    Int       @id @default(autoincrement())
+  nome       String
+  idUtilizador Int
+  dataCriacao DateTime
+  utilizador  Utilizador @relation(fields: [idUtilizador], references: [idUtilizador], onDelete: Cascade)
+  filmes     ListaFilme[]
+  series     ListaSerie[]
+  compartilhamentos ListaCompartilhamento[]
+}
+
+model ListaCompartilhamento {
+  idCompartilhamento Int       @id @default(autoincrement())
+  idLista            Int
+  idUtilizador       Int
+  lista              Lista     @relation(fields: [idLista], references: [idLista])
+  utilizador         Utilizador @relation(fields: [idUtilizador], references: [idUtilizador])
+}
+
+model ListaFilme {
+  idLista   Int
+  idFilme   Int
+  lista     Lista   @relation(fields: [idLista], references: [idLista], onDelete: Cascade)
+  filme     Filme   @relation(fields: [idFilme], references: [idFilme], onDelete: Cascade)
+  @@id([idLista, idFilme])
+}
+
+model ListaSerie {
+  idLista   Int
+  idSerie   Int
+  lista     Lista   @relation(fields: [idLista], references: [idLista], onDelete: Cascade)
+  serie     Series  @relation(fields: [idSerie], references: [idSerie], onDelete: Cascade)
+  @@id([idLista, idSerie])
+}
+
+model Classificacao {
+  idClassificacao Int     @id @default(autoincrement())
+  valor           Float
+  comentario      String?
+  dataAvaliacao   DateTime
+  idFilme         Int?
+  idSerie         Int?
+  idUtilizador    Int
+  filme           Filme?  @relation(fields: [idFilme], references: [idFilme])
+  serie           Series? @relation(fields: [idSerie], references: [idSerie])
+  utilizador      Utilizador @relation(fields: [idUtilizador], references: [idUtilizador])
+}
+
+model PessoaFilme {
+  idPessoa Int
+  idFilme  Int
+  pessoa   Pessoa @relation(fields: [idPessoa], references: [idPessoa])
+  filme    Filme  @relation(fields: [idFilme], references: [idFilme])
+  @@id([idPessoa, idFilme])
+}
+
+model PessoaSerie {
+  idPessoa Int
+  idSerie  Int
+  pessoa   Pessoa @relation(fields: [idPessoa], references: [idPessoa])
+  serie    Series @relation(fields: [idSerie], references: [idSerie])
+  @@id([idPessoa, idSerie])
+}
+
+model Calendario {
+  idCalendario  Int        @id @default(autoincrement())
+  dataEvento    DateTime
+  lembrete      String?
+  idUtilizador  Int
+  utilizador    Utilizador @relation(fields: [idUtilizador], references: [idUtilizador])
+  idFilme       Int?
+  filme         Filme?     @relation(fields: [idFilme], references: [idFilme])
+  idEpisodio    Int?
+  episodio      Episodio?  @relation(fields: [idEpisodio], references: [idEpisodio])
+}
+
