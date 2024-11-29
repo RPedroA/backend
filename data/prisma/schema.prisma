@@ -68,7 +68,7 @@ model Temporada {
   dataLancamento DateTime
   idSerie     Int
   serie       Series   @relation(fields: [idSerie], references: [idSerie])
-  episodios   Episodio[] @relation(onDelete: Cascade)
+  episodios   Episodio[] 
 }
 
 model Episodio {
